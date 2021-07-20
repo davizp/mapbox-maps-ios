@@ -143,12 +143,14 @@ public class Snapshotter {
 
                 // Composite the logo on the snapshot,
                 // only after everything else has been drawn.
-                let logoView = LogoView(logoSize: .regular)
-                let logoPadding = CGFloat(10.0)
-                let logoOrigin = CGPoint(x: logoPadding,
-                                         y: uiImage.size.height - logoView.frame.size.height - logoPadding)
-                context.translateBy(x: logoOrigin.x, y: logoOrigin.y)
-                logoView.layer.render(in: context)
+                if self.options.showsLogo {
+                    let logoView = LogoView(logoSize: .regular)
+                    let logoPadding = CGFloat(10.0)
+                    let logoOrigin = CGPoint(x: logoPadding,
+                                             y: uiImage.size.height - logoView.frame.size.height - logoPadding)
+                    context.translateBy(x: logoOrigin.x, y: logoOrigin.y)
+                    logoView.layer.render(in: context)
+                }
             }
             completion(.success(compositeImage))
         }
