@@ -150,6 +150,8 @@ public class Snapshotter {
                                              y: uiImage.size.height - logoView.frame.size.height - logoPadding)
                     context.translateBy(x: logoOrigin.x, y: logoOrigin.y)
                     logoView.layer.render(in: context)
+                } else {
+                    Log.warning(forMessage: "The Mapbox terms of service, which governs the use of Mapbox-hosted vector tiles and styles, requires most Mapbox customers to display the Mapbox wordmark. If this applies to you, do not hide the wordmark or change its contents.", category: "Snapshotter")
                 }
             }
             completion(.success(compositeImage))
