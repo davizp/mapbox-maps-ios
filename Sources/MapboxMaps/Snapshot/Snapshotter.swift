@@ -1,13 +1,7 @@
 import UIKit
 import CoreLocation
 
-#if canImport(MapboxMapsFoundation)
-import MapboxMapsFoundation
-#endif
-
-#if canImport(MapboxMapsStyle)
-import MapboxMapsStyle
-#endif
+@_implementationOnly import MapboxCommon_Private
 
 // MARK: - Snapshotter
 public class Snapshotter {
