@@ -47,6 +47,7 @@ let package = Package(
                 .copy("Resources/empty-style-chicago.json"),
                 .copy("Resources/Snapshot-Asset.png"),
                 .copy("Resources/testShowsLogo().png"),
+                .copy("Resources/testDoNotShowsLogo().png"),
                 .process("Resources/MapInitOptionsTests.xib"),
             ]
         )
