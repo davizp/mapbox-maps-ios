@@ -1,6 +1,6 @@
 import UIKit
 import Turf
-@_implementationOnly import MapboxCommon_Private
+@_spi(Internal) import MapboxCommon
 
 public protocol Annotation {
 

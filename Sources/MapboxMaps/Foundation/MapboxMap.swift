@@ -2,8 +2,8 @@
 import MapboxCoreMaps
 import Turf
 import UIKit
-@_implementationOnly import MapboxCommon_Private
-@_implementationOnly import MapboxCoreMaps_Private
+@_spi(Internal) import MapboxCommon
+@_spi(Internal) import MapboxCoreMaps
 
 public final class MapboxMap {
     /// The underlying renderer object responsible for rendering the map

@@ -1,7 +1,7 @@
 @_exported import MapboxCoreMaps
 @_exported import MapboxCommon
-@_implementationOnly import MapboxCoreMaps_Private
-@_implementationOnly import MapboxCommon_Private
+@_spi(Internal) import MapboxCoreMaps
+@_spi(Internal) import MapboxCommon
 import UIKit
 import Turf
 

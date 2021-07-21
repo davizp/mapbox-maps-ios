@@ -1,6 +1,6 @@
 import UIKit
 import Turf
-@_implementationOnly import MapboxCommon_Private
+@_spi(Internal) import MapboxCommon
 
 public protocol CameraAnimator: Cancelable {
 
@@ -133,9 +133,9 @@ public class CameraAnimationsManager {
             transition.center.toValue = camera.center
             transition.padding.toValue = camera.padding
             transition.anchor.toValue = camera.anchor
-            transition.zoom.toValue = camera.zoom
+            transition.zoom.toValue = camera.zoom.map(CGFloat.init(_:))
             transition.bearing.toValue = camera.bearing
-            transition.pitch.toValue = camera.pitch
+            transition.pitch.toValue = camera.pitch.map(CGFloat.init(_:))
         }
 
         // Nil out the `internalAnimator` once the "ease to" finishes

@@ -1,5 +1,5 @@
 import UIKit
-@_implementationOnly import MapboxCommon_Private
+@_spi(Internal) import MapboxCommon
 
 extension PointAnnotation {
     public enum Image: Hashable {

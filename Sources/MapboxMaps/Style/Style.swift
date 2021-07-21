@@ -1,6 +1,6 @@
 import Turf
-@_implementationOnly import MapboxCommon_Private
-@_implementationOnly import MapboxCoreMaps_Private
+@_spi(Internal) import MapboxCommon
+@_spi(Internal) import MapboxCoreMaps
 
 //swiftlint:disable file_length
 public class Style {
@@ -237,35 +237,6 @@ public class Style {
     public func terrainProperty(_ property: String) -> Any {
         return _terrainProperty(property).value
     }
-
-    // MARK: - Conversion helpers
-
-    private func handleExpected(closure: () -> (Expected<AnyObject, AnyObject>)) throws {
-        let expected = closure()
-
-        if expected.isError() {
-            // swiftlint:disable force_cast
-            throw StyleError(message: expected.error as! String)
-            // swiftlint:enable force_cast
-        }
-    }
-
-    private func handleExpected<T>(closure: () -> (Expected<AnyObject, AnyObject>)) throws -> T {
-        let expected = closure()
-
-        if expected.isError() {
-            // swiftlint:disable force_cast
-            throw StyleError(message: expected.error as! String)
-            // swiftlint:enable force_cast
-        }
-
-        guard let result = expected.value as? T else {
-            assertionFailure("Unexpected type mismatch. Type: \(String(describing: expected.value)) expect \(T.self)")
-            throw TypeConversionError.unexpectedType
-        }
-
-        return result
-    }
 }
 
 // MARK: - StyleManagerProtocol -
@@ -307,7 +278,7 @@ extension Style: StyleManagerProtocol {
     }
 
     public var defaultCamera: CameraOptions {
-        return CameraOptions(styleManager.getStyleDefaultCamera())
+        return styleManager.getStyleDefaultCamera()
     }
 
     public var transition: TransitionOptions {
@@ -315,46 +286,34 @@ extension Style: StyleManagerProtocol {
             styleManager.getStyleTransition()
         }
         set {
-            styleManager.setStyleTransitionFor(newValue)
+            styleManager.setStyleTransition(newValue)
         }
     }
 
     // MARK: - Layers
 
     public func addLayer(with properties: [String: Any], layerPosition: LayerPosition?) throws {
-        return try handleExpected {
-            return styleManager.addStyleLayer(forProperties: properties, layerPosition: layerPosition?.corePosition)
-        }
+        return try styleManager.addStyleLayer(forProperties: properties, layerPosition: layerPosition?.corePosition).get()
     }
 
     public func _addPersistentLayer(with properties: [String: Any], layerPosition: LayerPosition?) throws {
-        return try handleExpected {
-            return styleManager.addPersistentStyleLayer(forProperties: properties, layerPosition: layerPosition?.corePosition)
-        }
+        return try styleManager.addPersistentStyleLayer(forProperties: properties, layerPosition: layerPosition?.corePosition).get()
     }
 
     public func _isPersistentLayer(id: String) throws -> Bool {
-        return try handleExpected {
-            return styleManager.isStyleLayerPersistent(forLayerId: id)
-        }
+        return try styleManager.isStyleLayerPersistent(forLayerId: id).get()
     }
 
     public func _addPersistentCustomLayer(withId id: String, layerHost: CustomLayerHost, layerPosition: LayerPosition?) throws {
-        return try handleExpected {
-            return styleManager.addPersistentStyleCustomLayer(forLayerId: id, layerHost: layerHost, layerPosition: layerPosition?.corePosition)
-        }
+        return try styleManager.addPersistentStyleCustomLayer(forLayerId: id, layerHost: layerHost, layerPosition: layerPosition?.corePosition).get()
     }
 
     public func addCustomLayer(withId id: String, layerHost: CustomLayerHost, layerPosition: LayerPosition?) throws {
-        return try handleExpected {
-            return styleManager.addStyleCustomLayer(forLayerId: id, layerHost: layerHost, layerPosition: layerPosition?.corePosition)
-        }
+        return try styleManager.addStyleCustomLayer(forLayerId: id, layerHost: layerHost, layerPosition: layerPosition?.corePosition).get()
     }
 
     public func removeLayer(withId id: String) throws {
-        return try handleExpected {
-            return styleManager.removeStyleLayer(forLayerId: id)
-        }
+        return try styleManager.removeStyleLayer(forLayerId: id).get()
     }
 
     public func layerExists(withId id: String) -> Bool {
@@ -378,9 +337,7 @@ extension Style: StyleManagerProtocol {
     }
 
     public func setLayerProperty(for layerId: String, property: String, value: Any) throws {
-        return try handleExpected {
-            return styleManager.setStyleLayerPropertyForLayerId(layerId, property: property, value: value)
-        }
+        return try styleManager.setStyleLayerProperty(forLayerId: layerId, property: property, value: value).get()
     }
 
     public static func _layerPropertyDefaultValue(for layerType: String, property: String) -> StylePropertyValue {
@@ -388,29 +345,26 @@ extension Style: StyleManagerProtocol {
     }
 
     public func layerProperties(for layerId: String) throws -> [String: Any] {
-        return try handleExpected {
-            return styleManager.getStyleLayerProperties(forLayerId: layerId)
+        let value = try styleManager.getStyleLayerProperties(forLayerId: layerId).get()
+        guard let v = value as? [String: Any] else {
+            assertionFailure("Unexpected type mismatch. Type: \(String(describing: value)) expect \([String: Any].self)")
+            throw TypeConversionError.unexpectedType
         }
+        return v
     }
 
     public func setLayerProperties(for layerId: String, properties: [String: Any]) throws {
-        return try handleExpected {
-            return styleManager.setStyleLayerPropertiesForLayerId(layerId, properties: properties)
-        }
+        return try styleManager.setStyleLayerProperties(forLayerId: layerId, properties: properties).get()
     }
 
     // MARK: - Sources
 
     public func addSource(withId id: String, properties: [String: Any]) throws {
-        return try handleExpected {
-            return styleManager.addStyleSource(forSourceId: id, properties: properties)
-        }
+        return try styleManager.addStyleSource(forSourceId: id, properties: properties).get()
     }
 
     public func removeSource(withId id: String) throws {
-        return try handleExpected {
-            return styleManager.removeStyleSource(forSourceId: id)
-        }
+        return try styleManager.removeStyleSource(forSourceId: id).get()
     }
 
     public func sourceExists(withId id: String) -> Bool {
@@ -434,21 +388,20 @@ extension Style: StyleManagerProtocol {
     }
 
     public func setSourceProperty(for sourceId: String, property: String, value: Any) throws {
-        return try handleExpected {
-            return styleManager.setStyleSourcePropertyForSourceId(sourceId, property: property, value: value)
-        }
+        return try styleManager.setStyleSourceProperty(forSourceId: sourceId, property: property, value: value).get()
     }
 
     public func sourceProperties(for sourceId: String) throws -> [String: Any] {
-        return try handleExpected {
-            return styleManager.getStyleSourceProperties(forSourceId: sourceId)
+        let value = try styleManager.getStyleSourceProperties(forSourceId: sourceId).get()
+        guard let v = value as? [String: Any] else {
+            assertionFailure("Unexpected type mismatch. Type: \(String(describing: value)) expect \([String: Any].self)")
+            throw TypeConversionError.unexpectedType
         }
+        return v
     }
 
     public func setSourceProperties(for sourceId: String, properties: [String: Any]) throws {
-        return try handleExpected {
-            return styleManager.setStyleSourcePropertiesForSourceId(sourceId, properties: properties)
-        }
+        return try styleManager.setStyleSourceProperties(forSourceId: sourceId, properties: properties).get()
     }
 
     public static func _sourcePropertyDefaultValue(for sourceType: String, property: String) -> StylePropertyValue {
@@ -462,9 +415,7 @@ extension Style: StyleManagerProtocol {
             throw TypeConversionError.unexpectedType
         }
 
-        return try handleExpected {
-            return styleManager.updateStyleImageSourceImage(forSourceId: id, image: mbmImage)
-        }
+        return try styleManager.updateStyleImageSourceImage(forSourceId: id, image: mbmImage).get()
     }
 
     // MARK: - Style images
@@ -474,92 +425,68 @@ extension Style: StyleManagerProtocol {
             throw TypeConversionError.unexpectedType
         }
 
-        return try handleExpected {
-            return styleManager.addStyleImage(forImageId: id,
+        return try styleManager.addStyleImage(forImageId: id,
                                               scale: Float(image.scale),
                                               image: mbmImage,
                                               sdf: sdf,
                                               stretchX: stretchX,
                                               stretchY: stretchY,
-                                              content: content)
-        }
+                                              content: content).get()
     }
 
     public func removeImage(withId id: String) throws {
-        return try handleExpected {
-            return styleManager.removeStyleImage(forImageId: id)
-        }
+        return try styleManager.removeStyleImage(forImageId: id).get()
     }
 
     public func image(withId id: String) -> UIImage? {
-        guard let mbmImage = styleManager.getStyleImage(forImageId: id) else {
-            return nil
-        }
-
-        return UIImage(mbxImage: mbmImage)
+        return styleManager.getStyleImage(forImageId: id).flatMap { UIImage(mbxImage: $0) }
     }
 
     // MARK: - Style
 
     public func setLight(properties: [String: Any]) throws {
-        return try handleExpected {
-            return styleManager.setStyleLightForProperties(properties)
-        }
+        return try styleManager.setStyleLight(forProperties: properties).get()
     }
 
     public func _lightProperty(_ property: String) -> StylePropertyValue {
-        return styleManager.getStyleLightProperty(forProperty: property)
+        return styleManager.getStyleLightProperty(property)
     }
 
     public func setLightProperty(_ property: String, value: Any) throws {
-        return try handleExpected {
-            return styleManager.setStyleLightPropertyForProperty(property, value: value)
-        }
+        return try styleManager.setStyleLightProperty(property, value: value).get()
     }
 
     // MARK: - Terrain
 
     public func setTerrain(properties: [String: Any]) throws {
-        return try handleExpected {
-            return styleManager.setStyleTerrainForProperties(properties)
-        }
+        return try styleManager.setStyleTerrain(withProperties: properties).get()
     }
 
     public func _terrainProperty(_ property: String) -> StylePropertyValue {
-        return styleManager.getStyleTerrainProperty(forProperty: property)
+        return styleManager.getStyleTerrainProperty(property)
     }
 
     public func setTerrainProperty(_ property: String, value: Any) throws {
-        return try handleExpected {
-            return styleManager.setStyleTerrainPropertyForProperty(property, value: value)
-        }
+        return try styleManager.setStyleTerrainProperty(property, value: value).get()
     }
 
     // MARK: - Custom geometry
 
     public func addCustomGeometrySource(withId id: String, options: CustomGeometrySourceOptions) throws {
-        return try handleExpected {
-            return styleManager.addStyleCustomGeometrySource(forSourceId: id, options: options)
-        }
+        return try styleManager.addStyleCustomGeometrySource(forSourceId: id, options: options).get()
     }
 
     public func _setCustomGeometrySourceTileData(forSourceId sourceId: String, tileId: CanonicalTileID, features: [Turf.Feature]) throws {
         let mbxFeatures = features.compactMap { Feature($0) }
-        return try handleExpected {
-            return styleManager.setStyleCustomGeometrySourceTileDataForSourceId(sourceId, tileId: tileId, featureCollection: mbxFeatures)
-        }
+        return try styleManager.setStyleCustomGeometrySourceTileData(forSourceId: sourceId, tileId: tileId, featureCollection: mbxFeatures).get()
     }
 
     public func invalidateCustomGeometrySourceTile(forSourceId sourceId: String, tileId: CanonicalTileID) throws {
-        return try handleExpected {
-            return styleManager.invalidateStyleCustomGeometrySourceTile(forSourceId: sourceId, tileId: tileId)
-        }
+        return try styleManager.invalidateStyleCustomGeometrySourceTile(forSourceId: sourceId, tileId: tileId).get()
     }
 
     public func invalidateCustomGeometrySourceRegion(forSourceId sourceId: String, bounds: CoordinateBounds) throws {
-        return try handleExpected {
-            return styleManager.invalidateStyleCustomGeometrySourceRegion(forSourceId: sourceId, bounds: bounds)
-        }
+        return try styleManager.invalidateStyleCustomGeometrySourceRegion(forSourceId: sourceId, bounds: bounds).get()
     }
 }
 

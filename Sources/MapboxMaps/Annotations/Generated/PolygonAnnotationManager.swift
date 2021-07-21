@@ -2,7 +2,7 @@
 // This file is generated.
 import Foundation
 import Turf
-@_implementationOnly import MapboxCommon_Private
+@_spi(Internal) import MapboxCommon
 
 /// An instance of `PolygonAnnotationManager` is responsible for a collection of `PolygonAnnotation`s.
 public class PolygonAnnotationManager: AnnotationManager {

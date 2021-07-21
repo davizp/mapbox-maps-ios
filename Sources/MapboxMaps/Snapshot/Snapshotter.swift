@@ -34,7 +34,7 @@ public class Snapshotter {
     ///   - options: Options describing an intended snapshot
     public init(options: MapSnapshotOptions) {
         self.options = options
-        mapSnapshotter = MapSnapshotter(options: MapboxCoreMaps.MapSnapshotOptions(options))
+        mapSnapshotter = MapSnapshotter(options: options)
         style = Style(with: mapSnapshotter)
     }
 
@@ -46,8 +46,8 @@ public class Snapshotter {
                               height: CGFloat(mbxSize.height))
             return size
         } set(newSize) {
-            let mbxSize = MapboxCoreMaps.Size(width: Float(newSize.width), height: Float(newSize.height))
-            mapSnapshotter.setSizeFor(mbxSize)
+            let mbxSize = Size(width: Float(newSize.width), height: Float(newSize.height))
+            mapSnapshotter.setSize(mbxSize)
         }
     }
 
@@ -59,7 +59,7 @@ public class Snapshotter {
     /// Sets the camera of the snapshotter
     /// - Parameter cameraOptions: The target camera options
     public func setCamera(to cameraOptions: CameraOptions) {
-        mapSnapshotter.setCameraFor(MapboxCoreMaps.CameraOptions(cameraOptions))
+        mapSnapshotter.setCamera(with: cameraOptions)
     }
 
     /// In the tile mode, the snapshotter fetches the still image of a single tile.
@@ -82,75 +82,70 @@ public class Snapshotter {
      `Result<UIImage, SnapshotError>` type.
      */
     public func start(overlayHandler: SnapshotOverlayHandler?,
-                      completion: @escaping (Result<UIImage, SnapshotError>) -> Void) {
+                      completion: @escaping (Result<UIImage, Error>) -> Void) {
 
         let scale = CGFloat(options.pixelRatio)
 
         mapSnapshotter.start { (expected) in
-            if expected.isError() {
-                completion(.failure(.snapshotFailed(reason: expected.error as? String)))
-                return
-            }
+            let result = expected
+                .flatMap { (snapshot) -> Result<UIImage, MapboxError<String>> in
+                    let mbxImage = snapshot.image()
 
-            guard expected.isValue(), let snapshot = expected.value as? MapSnapshot else {
+                    guard let uiImage = UIImage(mbxImage: mbxImage, scale: scale) else {
+                        return .failure(MapboxError<String>(content: "Could not convert internal Image type to UIImage."))
+                    }
 
-                completion(.failure(.snapshotFailed(reason: expected.error as? String)))
-                return
-            }
+                    let rect = CGRect(origin: .zero, size: uiImage.size)
+                    let format = UIGraphicsImageRendererFormat()
+                    format.scale = scale
+                    let renderer = UIGraphicsImageRenderer(size: uiImage.size, format: format)
+                    let compositeImage = renderer.image { rendererContext in
 
-            let mbxImage = snapshot.image()
+                        // First draw the snaphot image into the context
+                        let context = rendererContext.cgContext
 
-            guard let uiImage = UIImage(mbxImage: mbxImage, scale: scale) else {
-                completion(.failure(.snapshotFailed(reason: "Could not convert internal Image type to UIImage.")))
-                return
-            }
+                        if let cgImage = uiImage.cgImage {
+                            context.draw(cgImage, in: rect)
+                        }
 
-            let rect = CGRect(origin: .zero, size: uiImage.size)
-            let format = UIGraphicsImageRendererFormat()
-            format.scale = scale
-            let renderer = UIGraphicsImageRenderer(size: uiImage.size, format: format)
-            let compositeImage = renderer.image { rendererContext in
+                        let pointForCoordinate = { (coordinate: CLLocationCoordinate2D) -> CGPoint in
+                            let screenCoordinate = snapshot.screenCoordinate(coordinate: coordinate)
+                            return CGPoint(x: screenCoordinate.x, y: screenCoordinate.y)
+                        }
 
-                // First draw the snaphot image into the context
-                let context = rendererContext.cgContext
+                        let coordinateForPoint = { (point: CGPoint) -> CLLocationCoordinate2D in
+                            // TODO: Fix circular dependency issues with MapboxMapsStyle/Foundation in order to use point.screenCoordinate extension
+                            let screenCoordinate = ScreenCoordinate(x: Double(point.x), y: Double(point.y))
+                            return snapshot.coordinate(screenCoordinate: screenCoordinate)
+                        }
 
-                if let cgImage = uiImage.cgImage {
-                    context.draw(cgImage, in: rect)
+                        // Apply the overlay, if provided.
+                        let overlay = SnapshotOverlay(context: context,
+                                                      scale: scale,
+                                                      pointForCoordinate: pointForCoordinate,
+                                                      coordinateForPoint: coordinateForPoint)
+
+                        if let overlayHandler = overlayHandler {
+                            context.saveGState()
+                            overlayHandler(overlay)
+                            context.restoreGState()
+                        }
+
+                        // Composite the logo on the snapshot,
+                        // only after everything else has been drawn.
+                        let logoView = LogoView(logoSize: .regular)
+                        let logoPadding = CGFloat(10.0)
+                        let logoOrigin = CGPoint(x: logoPadding,
+                                                 y: uiImage.size.height - logoView.frame.size.height - logoPadding)
+                        context.translateBy(x: logoOrigin.x, y: logoOrigin.y)
+                        logoView.layer.render(in: context)
+                    }
+                    return .success(compositeImage)
                 }
-
-                let pointForCoordinate = { (coordinate: CLLocationCoordinate2D) -> CGPoint in
-                    let screenCoordinate = snapshot.screenCoordinate(for: coordinate)
-                    return CGPoint(x: screenCoordinate.x, y: screenCoordinate.y)
+                .mapError { (error) -> Error in
+                    error
                 }
-
-                let coordinateForPoint = { (point: CGPoint) -> CLLocationCoordinate2D in
-                    // TODO: Fix circular dependency issues with MapboxMapsStyle/Foundation in order to use point.screenCoordinate extension
-                    let screenCoordinate = ScreenCoordinate(x: Double(point.x), y: Double(point.y))
-                    return snapshot.coordinate(for: screenCoordinate)
-                }
-
-                // Apply the overlay, if provided.
-                let overlay = SnapshotOverlay(context: context,
-                                              scale: scale,
-                                              pointForCoordinate: pointForCoordinate,
-                                              coordinateForPoint: coordinateForPoint)
-
-                if let overlayHandler = overlayHandler {
-                    context.saveGState()
-                    overlayHandler(overlay)
-                    context.restoreGState()
-                }
-
-                // Composite the logo on the snapshot,
-                // only after everything else has been drawn.
-                let logoView = LogoView(logoSize: .regular)
-                let logoPadding = CGFloat(10.0)
-                let logoOrigin = CGPoint(x: logoPadding,
-                                         y: uiImage.size.height - logoView.frame.size.height - logoPadding)
-                context.translateBy(x: logoOrigin.x, y: logoOrigin.y)
-                logoView.layer.render(in: context)
-            }
-            completion(.success(compositeImage))
+            completion(result)
         }
     }
 
@@ -160,13 +155,6 @@ public class Snapshotter {
      */
     public func cancel() {
         mapSnapshotter.cancel()
-    }
-
-    public enum SnapshotError: Error {
-        case unknown
-
-        /// Snapshot failed with error description
-        case snapshotFailed(reason: String?)
     }
 
     internal func compositeLogo(for snapshotImage: UIImage) -> UIImage {
@@ -206,7 +194,7 @@ public class Snapshotter {
     /// - Parameter camera: The camera for which the coordinate bounds will be returned.
     /// - Returns: `CoordinateBounds` for the given `CameraOptions`
     public func coordinateBounds(for camera: CameraOptions) -> CoordinateBounds {
-        return mapSnapshotter.coordinateBoundsForCamera(forCamera: MapboxCoreMaps.CameraOptions(camera))
+        return mapSnapshotter.coordinateBoundsForCamera(camera)
     }
 
     /// Calculates a `CameraOptions` to fit a list of coordinates.
@@ -221,11 +209,11 @@ public class Snapshotter {
                        padding: UIEdgeInsets,
                        bearing: Double?,
                        pitch: Double?) -> CameraOptions {
-        return CameraOptions(mapSnapshotter.cameraForCoordinates(
-                                forCoordinates: coordinates.map(\.location),
-                                padding: padding.toMBXEdgeInsetsValue(),
-                                bearing: bearing?.NSNumber,
-                                pitch: pitch?.NSNumber))
+        return mapSnapshotter.cameraForCoordinates(
+            coordinates: coordinates,
+            padding: padding.toMBXEdgeInsetsValue(),
+            bearing: bearing,
+            pitch: pitch)
     }
 }
 

@@ -1,5 +1,5 @@
 import Foundation
-@_implementationOnly import MapboxCommon_Private
+@_spi(Internal) import MapboxCommon
 
 /// Convenience class that manages a global `ResourceOptions`
 ///

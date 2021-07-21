@@ -1,7 +1,7 @@
 import UIKit
 import MapboxCoreMaps
-@_implementationOnly import MapboxCoreMaps_Private
-@_implementationOnly import MapboxCommon_Private
+@_spi(Internal) import MapboxCoreMaps
+@_spi(Internal) import MapboxCommon
 
 public struct Puck2DConfiguration: Equatable {
 

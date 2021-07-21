@@ -1,41 +1,28 @@
-@_implementationOnly import MapboxCoreMaps_Private
+@_spi(Internal) import MapboxCoreMaps
 
 @available(*, deprecated)
 extension OfflineRegionManager {
 
     // :nodoc:
-    public convenience init(resourceOptions: ResourceOptions) {
-        self.init(resourceOptions: MapboxCoreMaps.ResourceOptions(resourceOptions))
-    }
-
-    // :nodoc:
-    public func offlineRegions(completion: @escaping (Result<[OfflineRegion], Error>) -> Void) {
-        getOfflineRegions(forCallback: coreAPIClosureAdapter(for: completion,
-                                                             type: NSArray.self,
-                                                             concreteErrorType: MapError.self))
+    public func offlineRegions(completion: @escaping (Result<[OfflineRegion], MapboxError<String>>) -> Void) {
+        getOfflineRegions(forCallback: completion)
     }
 
     // :nodoc:
     public func createOfflineRegion(for geometryDefinition: OfflineRegionGeometryDefinition,
-                                    completion: @escaping (Result<OfflineRegion, Error>) -> Void) {
-        createOfflineRegion(for: geometryDefinition, callback: coreAPIClosureAdapter(for: completion,
-                                                                                     type: OfflineRegion.self,
-                                                                                     concreteErrorType: MapError.self))
+                                    completion: @escaping (Result<OfflineRegion, MapboxError<String>>) -> Void) {
+        createOfflineRegion(for: geometryDefinition, callback: completion)
     }
 
     // :nodoc:
     public func createOfflineRegion(for tilePyramidDefinition: OfflineRegionTilePyramidDefinition,
-                                    completion: @escaping (Result<OfflineRegion, Error>) -> Void) {
-        createOfflineRegion(for: tilePyramidDefinition, callback: coreAPIClosureAdapter(for: completion,
-                                                                                        type: OfflineRegion.self,
-                                                                                        concreteErrorType: MapError.self))
+                                    completion: @escaping (Result<OfflineRegion, MapboxError<String>>) -> Void) {
+        createOfflineRegion(for: tilePyramidDefinition, callback: completion)
     }
 
     // :nodoc:
     public func mergeOfflineDatabase(for filePath: String,
-                                     completion: @escaping (Result<OfflineRegion, Error>) -> Void) {
-        mergeOfflineDatabase(forFilePath: filePath, callback: coreAPIClosureAdapter(for: completion,
-                                                                                    type: OfflineRegion.self,
-                                                                                    concreteErrorType: MapError.self))
+                                     completion: @escaping (Result<[OfflineRegion], MapboxError<String>>) -> Void) {
+        mergeOfflineDatabase(forFilePath: filePath, callback: completion)
     }
 }

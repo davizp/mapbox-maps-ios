@@ -1,47 +1,41 @@
 import Foundation
-@_implementationOnly import MapboxCommon_Private
+@_spi(Internal) import MapboxCommon
 
 // MARK: - ResourceOptions
 
 /// Options to configure access to a resource
-public struct ResourceOptions {
-
-    /// The access token to access the resource. This should be a valid, non-empty,
-    /// Mapbox access token
-    public var accessToken: String
+public extension ResourceOptions {
 
     /// The base URL. Leave as `nil` unless you have a reason to change this.
-    public var baseURL: URL?
+    var baseURL: URL? {
+        get {
+            _baseURL.map(URL.init(fileURLWithPath:))
+        }
+        set {
+            _baseURL = newValue?.path
+        }
+    }
 
     /// The file URL to the cache. The default, `nil`, will choose an appropriate
     /// location on the device. The default location is excluded from backups.
-    public var dataPathURL: URL?
+    var dataPathURL: URL? {
+        get {
+            _dataPath.map(URL.init(fileURLWithPath:))
+        }
+        set {
+            _dataPath = newValue?.path
+        }
+    }
 
     /// The path to the assets. The default, `nil`, uses the main bundle.
-    public var assetPathURL: URL?
-
-    /// The tile store instance
-    ///
-    /// This setting can be applied only if tile store usage is enabled,
-    /// otherwise it is ignored.
-    ///
-    /// If not set and tile store usage is enabled, a tile store at the default
-    /// location will be created and used.
-    ///
-    /// - Attention:
-    ///     If you create a `ResourceOptions` (rather than using `ResourceOptionsManager`
-    ///     to manage one) that uses a custom TileStore, you will need to ensure
-    ///     that the `TileStore` is initialized with a valid access token.
-    ///
-    ///     For example:
-    ///
-    ///     ```
-    ///     tileStore.setOptionForKey(TileStoreOptions.mapboxAccessToken, value: accessToken)
-    ///     ```
-    public var tileStore: TileStore?
-
-    /// Tile store usage mode
-    public var tileStoreUsageMode: TileStoreUsageMode
+    var assetPathURL: URL? {
+        get {
+            _assetPath.map(URL.init(fileURLWithPath:))
+        }
+        set {
+            _assetPath = newValue?.path
+        }
+    }
 
     /// Initialize a `ResourceOptions`, used by both `MapView`s and `Snapshotter`s
     /// - Parameters:
@@ -81,18 +75,19 @@ public struct ResourceOptions {
     ///     and then a tile pack that also includes this tile. The individual tile
     ///     in the disk cache won’t be used as long as the up-to-date tile pack
     ///     exists in the cache.
-    public init(accessToken: String,
-                baseURL: URL? = nil,
-                dataPathURL: URL? = nil,
-                assetPathURL: URL? = nil,
-                tileStore: TileStore? = nil,
-                tileStoreUsageMode: TileStoreUsageMode = .readOnly) {
-        self.accessToken        = accessToken
-        self.baseURL            = baseURL
-        self.dataPathURL        = dataPathURL
-        self.assetPathURL       = assetPathURL ?? Bundle.main.resourceURL
-        self.tileStore          = tileStore
-        self.tileStoreUsageMode = tileStoreUsageMode
+    init(accessToken: String,
+         baseURL: URL? = nil,
+         dataPathURL: URL? = nil,
+         assetPathURL: URL? = nil,
+         tileStore: TileStore? = nil,
+         tileStoreUsageMode: TileStoreUsageMode = .readOnly) {
+        self.init(
+            _accessToken: accessToken,
+            baseURL: baseURL?.path,
+            dataPath: dataPathURL?.path,
+            assetPath: assetPathURL?.path,
+            tileStore: tileStore,
+            tileStoreUsageMode: tileStoreUsageMode)
     }
 }
 
@@ -143,34 +138,5 @@ extension ResourceOptions: CustomStringConvertible, CustomDebugStringConvertible
         withUnsafePointer(to: self) {
             return "ResourceOptions @ \($0): \(redactedAccessToken())"
         }
-    }
-}
-
-// MARK: - Conversion to/from internal type
-
-extension ResourceOptions {
-    internal init(_ objcValue: MapboxCoreMaps.ResourceOptions) {
-
-        let baseURL      = objcValue.baseURL.flatMap { URL(fileURLWithPath: $0) }
-        let dataPathURL = objcValue.dataPath.flatMap { URL(fileURLWithPath: $0) }
-        let assetPathURL = objcValue.assetPath.flatMap { URL(fileURLWithPath: $0) }
-
-        self.init(accessToken: objcValue.accessToken,
-                  baseURL: baseURL,
-                  dataPathURL: dataPathURL,
-                  assetPathURL: assetPathURL,
-                  tileStore: objcValue.tileStore,
-                  tileStoreUsageMode: objcValue.tileStoreUsageMode)
-    }
-}
-
-extension MapboxCoreMaps.ResourceOptions {
-    internal convenience init(_ swiftValue: ResourceOptions) {
-        self.init(__accessToken: swiftValue.accessToken,
-                  baseURL: swiftValue.baseURL?.path,
-                  dataPath: swiftValue.dataPathURL?.path,
-                  assetPath: swiftValue.assetPathURL?.path,
-                  tileStore: swiftValue.tileStore,
-                  tileStoreUsageMode: swiftValue.tileStoreUsageMode)
     }
 }

@@ -1,6 +1,6 @@
 import Foundation
 import UIKit
-@_implementationOnly import MapboxCommon_Private
+@_spi(Internal) import MapboxCommon
 
 #if swift(>=5.4)
 @resultBuilder

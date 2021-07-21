@@ -1,5 +1,5 @@
 import UIKit
-@_implementationOnly import MapboxCommon_Private
+@_spi(Internal) import MapboxCommon
 
 internal class MapboxInfoButtonOrnament: UIView {
     internal enum Constants {

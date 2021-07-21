@@ -51,19 +51,18 @@ public struct CameraTransition: Equatable {
         return CameraOptions(center: center.toValue,
                              padding: padding.toValue,
                              anchor: anchor.toValue,
-                             zoom: zoom.toValue,
+                             zoom: zoom.toValue.map(Double.init(_:)),
                              bearing: shouldOptimizeBearingPath ? optimizedBearingToValue : bearing.toValue,
-                             pitch: pitch.toValue)
+                             pitch: pitch.toValue.map(Double.init(_:)))
     }
 
     internal var fromCameraOptions: CameraOptions {
         return CameraOptions(center: center.fromValue,
                              padding: padding.fromValue,
                              anchor: anchor.fromValue,
-                             zoom: zoom.fromValue,
+                             zoom: Double(zoom.fromValue),
                              bearing: bearing.fromValue,
-                             pitch: pitch.fromValue)
-
+                             pitch: Double(pitch.fromValue))
     }
 
     internal var optimizedBearingToValue: CLLocationDirection? {

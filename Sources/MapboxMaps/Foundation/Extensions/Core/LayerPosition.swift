@@ -13,7 +13,7 @@ public enum LayerPosition: Equatable {
     case below(String)
 
     /// Layer should be positioned at the specified index in the layers stack.
-    case at(Int)
+    case at(UInt32)
 
     internal var corePosition: MapboxCoreMaps.LayerPosition {
         switch self {
@@ -26,19 +26,5 @@ public enum LayerPosition: Equatable {
         case .at(let index):
             return MapboxCoreMaps.LayerPosition(at: index)
         }
-    }
-}
-
-// MARK: - MapboxCoreMaps.LayerPosition conveniences
-
-extension MapboxCoreMaps.LayerPosition {
-
-    internal convenience init(above: String? = nil, below: String? = nil, at: Int? = nil) {
-        self.init(__above: above, below: below, at: at?.NSNumber)
-    }
-
-    /// Layer should be positioned at a specified index in the layers stack
-    internal var at: UInt32? {
-        return __at?.uint32Value
     }
 }

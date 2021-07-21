@@ -1,5 +1,5 @@
 import Turf
-@_implementationOnly import MapboxCoreMaps_Private
+@_spi(Internal) import MapboxCoreMaps
 
 internal protocol MapFeatureQueryable: AnyObject {
     /// Queries the map for rendered features.

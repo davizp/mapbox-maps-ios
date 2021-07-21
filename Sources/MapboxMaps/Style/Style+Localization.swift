@@ -1,4 +1,4 @@
-@_implementationOnly import MapboxCommon_Private
+@_spi(Internal) import MapboxCommon
 
 /// Support for localization of labels
 extension Style {

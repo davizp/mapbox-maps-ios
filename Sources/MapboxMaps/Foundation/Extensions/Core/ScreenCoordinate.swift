@@ -12,7 +12,7 @@ extension ScreenCoordinate {
     /// - Parameters:
     ///   - x: The horizontal point along the screen's coordinate system.
     ///   - y: The vertical point along the screen's coordinate system.
-    internal convenience init(x: CGFloat, y: CGFloat) {
+    internal init(x: CGFloat, y: CGFloat) {
         self.init(x: Double(x), y: Double(y))
     }
     // swiftlint:enable identifier_name

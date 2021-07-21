@@ -21,8 +21,8 @@ extension GlyphsRasterizationOptions {
     /// - Note:
     ///     Calling `GlyphsRasterizationOptions()` will currently not call this
     ///     initializer.
-    public convenience init(rasterizationMode: GlyphsRasterizationMode = .ideographsRasterizedLocally,
-                            fontFamilies: [String] = []) {
+    public init(rasterizationMode: GlyphsRasterizationMode = .ideographsRasterizedLocally,
+                fontFamilies: [String] = []) {
         // If rasterizationMode is .noGlyphsRasterizedLocally, we ignore the
         // font family
         guard rasterizationMode != .noGlyphsRasterizedLocally else {
@@ -54,27 +54,4 @@ extension GlyphsRasterizationOptions {
 
     internal static let fallbackFontFamilyName =
         UIFont.systemFont(ofSize: 0, weight: .regular).familyName
-
-    /// :nodoc:
-    public override func isEqual(_ object: Any?) -> Bool {
-        guard let other = object as? GlyphsRasterizationOptions else {
-            return false
-        }
-
-        guard type(of: self) == type(of: other) else {
-            return false
-        }
-
-        return
-            (rasterizationMode == other.rasterizationMode) &&
-            (fontFamily == other.fontFamily)
-    }
-
-    /// :nodoc:
-    open override var hash: Int {
-        var hasher = Hasher()
-        hasher.combine(rasterizationMode)
-        hasher.combine(fontFamily)
-        return hasher.finalize()
-    }
 }

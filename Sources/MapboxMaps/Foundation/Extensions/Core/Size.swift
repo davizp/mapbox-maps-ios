@@ -1,7 +1,7 @@
 import MapboxCoreMaps
 
 extension Size {
-    internal convenience init(_ cgSize: CGSize) {
+    internal init(_ cgSize: CGSize) {
         self.init(width: Float(cgSize.width), height: Float(cgSize.height))
     }
 }
